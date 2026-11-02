@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Productos";
+}
+<div id="productos-app" data-base="@Url.Content("~/Productos")">
+    @Html.AntiForgeryToken()
+    <h1>Productos</h1>
+    <p class="text-muted">Organizá los productos de la librería. Podés reactivar un producto desde Editar.</p>
+    <div v-if="false" class="alert alert-info">Cargando productos…</div>
+    <div v-cloak>
+        <div v-if="mensaje" class="alert" :class="error ? 'alert-danger' : 'alert-success'" role="status">{{ mensaje }}</div>
+        <div class="row g-4">
+            <section class="col-lg-4" aria-labelledby="formulario-titulo">
+                <div class="card card-body">
+                    <h2 id="formulario-titulo" class="h5">{{ editando ? 'Editar producto' : 'Nuevo producto' }}</h2>
+                    <form v-on:submit.prevent="guardar">
+                        <label for="nombre-producto" class="form-label">Nombre</label>
+                        <input id="nombre-producto" class="form-control" v-model="formulario.nombre" required maxlength="150" :disabled="guardando" />
+                        <label for="marca-producto" class="form-label mt-3">Marca</label>
+                        <input id="marca-producto" class="form-control" v-model="formulario.marca" maxlength="100" :disabled="guardando" />
+                        <label for="precio-producto" class="form-label mt-3">Precio ($)</label>
+                        <input id="precio-producto" class="form-control" type="number" min="0.01" max="9999999999999999.99" step="0.01" v-model.number="formulario.precio" required :disabled="guardando" />
+                        <label for="stock-producto" class="form-label mt-3">Stock</label>
+                        <input id="stock-producto" class="form-control" type="number" min="0" max="2147483647" step="1" v-model.number="formulario.stock" required :disabled="guardando" />
+                        <label for="buscar-categoria" class="form-label mt-3">Buscar categoría activa</label>
+                        <div class="d-flex gap-2">
+                            <input id="buscar-categoria" class="form-control" v-model="busquedaCategoria" v-on:input="programarBusqueda" placeholder="Escribí para buscar" :disabled="guardando" />
+                            <button type="button" class="btn btn-outline-secondary" v-on:click="buscarCategorias" :disabled="guardando || buscandoCategorias">Buscar</button>
+                        </div>
+                        <p v-if="buscandoCategorias" role="status">Buscando categorías…</p>
+                        <ul v-if="opcionesCategoria.length" class="list-group mt-2">
+                            <li v-for="opcion in opcionesCategoria" :key="opcion.idCategoria" class="list-group-item p-0">
+                                <button type="button" class="btn text-start w-100" v-on:click="seleccionarCategoria(opcion)" :disabled="guardando">{{ opcion.nombre }}</button>
+                            </li>
+                        </ul>
+                        <p v-if="busquedaRealizada && !buscandoCategorias && !opcionesCategoria.length" class="small text-muted">Sin resultados. Podés crear categorías desde el menú Categorías.</p>
+                        <p class="small mt-2">Seleccionada: <strong>{{ categoriaSeleccionada || 'Ninguna' }}</strong></p>
+                        <div class="form-check my-3">
+                            <input id="estado-producto" type="checkbox" class="form-check-input" v-model="formulario.estado" :disabled="guardando" />
+                            <label for="estado-producto" class="form-check-label">Activo</label>
+                        </div>
+                        <button class="btn btn-primary" :disabled="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+                        <button v-if="editando" type="button" class="btn btn-outline-secondary ms-2" v-on:click="cancelar" :disabled="guardando">Cancelar</button>
+                    </form>
+                </div>
+            </section>
+            <section class="col-lg-8" aria-label="Listado de productos">
+                <form class="d-flex gap-2 mb-3" v-on:submit.prevent="cargar(1)">
+                    <input type="search" class="form-control" placeholder="Buscar por nombre o marca" aria-label="Buscar por nombre o marca" v-model="buscar" maxlength="100" />
+                    <button class="btn btn-outline-primary" :disabled="cargando">Buscar</button>
+                </form>
+                <p v-if="cargando" role="status">Cargando…</p>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            <tr v-for="producto in elementos" :key="producto.idProducto">
+                                <td>{{ producto.nombre }}<small class="d-block text-muted">{{ producto.marca }}</small></td>
+                                <td>{{ producto.categoriaNombre }}</td><td>{{ moneda(producto.precio) }}</td><td>{{ producto.stock }}</td>
+                                <td><span class="badge" :class="producto.estado ? 'bg-success' : 'bg-secondary'">{{ producto.estado ? 'Activo' : 'Inactivo' }}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-2" v-on:click="editar(producto)" :disabled="guardando">Editar</button>
+                                    <button v-if="producto.estado" class="btn btn-sm btn-outline-danger" v-on:click="desactivar(producto)" :disabled="guardando">Desactivar</button>
+                                </td>
+                            </tr>
+                            <tr v-if="!cargando && elementos.length === 0"><td colspan="6">No hay productos para esta búsqueda.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <nav class="d-flex align-items-center justify-content-between" aria-label="Paginacion">
+                    <button class="btn btn-outline-secondary" v-on:click="cargar(pagina - 1)" :disabled="pagina <= 1 || cargando || guardando">Anterior</button>
+                    <span>Página {{ pagina }} de {{ paginas }} · {{ total }} productos</span>
+                    <button class="btn btn-outline-secondary" v-on:click="cargar(pagina + 1)" :disabled="pagina >= paginas || cargando || guardando">Siguiente</button>
+                </nav>
+            </section>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/lib/vue/vue.global.prod.js" asp-append-version="true"></script>
+    <script src="~/js/productos.js" asp-append-version="true"></script>
+}

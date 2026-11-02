@@ -19,4 +19,23 @@ public class LibreriaContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Reserva> Reservas { get; set; }
     public DbSet<DetalleReserva> DetallesReserva { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Producto>().Property(p => p.Precio).HasPrecision(18, 2);
+        modelBuilder.Entity<DetalleReserva>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
+
+        // Conservar el historial: no borrar reservas al eliminar clientes o productos.
+        foreach (var relation in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            relation.DeleteBehavior = DeleteBehavior.Restrict;
+
+        modelBuilder.Entity<Categoria>().Property(c => c.Nombre).HasMaxLength(100);
+        modelBuilder.Entity<Producto>().Property(p => p.Nombre).HasMaxLength(150);
+        modelBuilder.Entity<Producto>().Property(p => p.Marca).HasMaxLength(100);
+        modelBuilder.Entity<Reserva>().Property(r => r.EstadoReserva).HasMaxLength(30);
+        modelBuilder.Entity<Usuario>().Property(u => u.Email).HasMaxLength(254);
+        modelBuilder.Entity<Usuario>().Property(u => u.Rol).HasMaxLength(30);
+        modelBuilder.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
+    }
 }

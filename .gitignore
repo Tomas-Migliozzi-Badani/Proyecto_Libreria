@@ -1,0 +1,6 @@
+# Archivos generados al compilar .NET
+[Bb]in/
+[Oo]bj/
+
+# Credenciales propias de cada equipo
+appsettings.Local.json
