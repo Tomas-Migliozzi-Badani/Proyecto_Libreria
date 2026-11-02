@@ -12,8 +12,12 @@ Vue.createApp({
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const respuesta = await fetch(`${base}/${accion}`, {
                 ...opciones,
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token }
             });
+            if (respuesta.status === 401) {
+                window.location.assign(document.body.dataset.login + '?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
+                throw new Error('Inicia sesion para continuar.');
+            }
             const datos = await respuesta.json().catch(() => ({}));
             if (!respuesta.ok) throw new Error(datos.mensaje || 'No se pudo completar la operacion. Intenta nuevamente.');
             return datos;

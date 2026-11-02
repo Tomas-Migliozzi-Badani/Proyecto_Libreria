@@ -1,8 +1,28 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{ ViewData["Title"] = "Inicio"; }
+<section class="py-4">
+<h1>Librería</h1>
+<p><a class="btn btn-primary" asp-controller="Catalogo" asp-action="Index">Explorar el catálogo</a></p>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <p class="lead">Bienvenido/a, @User.Identity.Name.</p>
+    <p>Tu rol es <strong>@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</strong>.</p>
+    @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+    {
+        <p>Usá el menú para administrar productos, clientes y reservas.</p>
+        <a class="btn btn-primary me-2" asp-controller="Reservas" asp-action="Index">Ir a reservas</a>
+        <a class="btn btn-outline-primary" asp-controller="Productos" asp-action="Index">Ver productos</a>
+    }
+    else
+    {
+        <p>Elegí productos desde el catálogo y consultá el estado de tus reservas.</p>
+        <a class="btn btn-outline-primary me-2" asp-controller="MisReservas" asp-action="Index">Mis reservas</a>
+        <a class="btn btn-outline-secondary" asp-controller="Cuenta" asp-action="Perfil">Mi perfil</a>
+    }
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+else
+{
+    <p class="lead">Sistema de gestión de productos y reservas.</p>
+    <p>Podés ver los productos sin iniciar sesión. Creá tu cuenta para reservar.</p>
+    <a class="btn btn-primary" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+}
+</section>

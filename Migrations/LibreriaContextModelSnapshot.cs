@@ -50,7 +50,8 @@ namespace Proyecto_Libreria.Migrations
 
                     b.Property<string>("Dni")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -65,6 +66,9 @@ namespace Proyecto_Libreria.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("IdCliente");
+
+                    b.HasIndex("Dni")
+                        .IsUnique();
 
                     b.ToTable("Clientes");
                 });
@@ -191,6 +195,9 @@ namespace Proyecto_Libreria.Migrations
                     b.Property<bool>("Estado")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("IdCliente")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -207,6 +214,9 @@ namespace Proyecto_Libreria.Migrations
                     b.HasKey("IdUsuario");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("IdCliente")
                         .IsUnique();
 
                     b.ToTable("Usuarios");
@@ -259,6 +269,16 @@ namespace Proyecto_Libreria.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Proyecto_Libreria.Models.Usuario", b =>
+                {
+                    b.HasOne("Proyecto_Libreria.Models.Cliente", "Cliente")
+                        .WithOne()
+                        .HasForeignKey("Proyecto_Libreria.Models.Usuario", "IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Cliente");
                 });
 #pragma warning restore 612, 618
         }

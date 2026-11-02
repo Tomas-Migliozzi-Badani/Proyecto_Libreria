@@ -14,4 +14,8 @@ public class Usuario
     public string Rol { get; set; } = "";
     public bool Estado { get; set; }
     public string Avatar { get; set; } = "";
+
+    // Solo las cuentas de clientes necesitan esta vinculacion.
+    public int? IdCliente { get; set; }
+    public Cliente? Cliente { get; set; }
 }

@@ -1,0 +1,46 @@
+@{ ViewData["Title"] = "Reservas"; }
+<div id="reservas-app" data-base="@Url.Content("~/Reservas")" data-operador="@User.Identity?.Name">
+@Html.AntiForgeryToken()
+<h1>Reservas</h1>
+<p class="text-muted">Una reserva agrupa varios productos. Al confirmar se descuenta el stock; al cancelar se devuelve.</p>
+<div v-cloak>
+<div v-if="mensaje" class="alert" :class="error ? 'alert-danger' : 'alert-success'" role="status">{{ mensaje }}</div>
+<section class="card card-body mb-4" aria-label="Formulario de reserva">
+<h2 class="h5">{{ editando ? 'Reserva #' + editando : 'Nueva reserva' }} <small v-if="soloLectura">(solo consulta)</small></h2>
+<form v-on:submit.prevent="guardar"><fieldset :disabled="guardando || soloLectura">
+<div class="row g-3">
+<div class="col-md-6" v-for="tipo in ['Clientes']" :key="tipo">
+<label class="form-label" :for="'busqueda-' + tipo">Cliente</label>
+<div class="d-flex gap-2"><input :id="'busqueda-' + tipo" class="form-control" v-model="busquedas[tipo]" v-on:input="programar(tipo)" placeholder="Escribí para buscar" maxlength="100" /><button type="button" class="btn btn-outline-secondary" v-on:click="buscarOpciones(tipo)">Buscar</button></div>
+<p class="small mt-2">Seleccionado: <strong>{{ seleccionados[tipo] || 'Ninguno' }}</strong></p>
+<ul class="list-group"><li v-for="opcion in opciones[tipo]" :key="opcion.id" class="list-group-item p-0"><button type="button" class="btn w-100 text-start" v-on:click="seleccionar(tipo, opcion)">{{ opcion.nombre }}</button></li></ul>
+<p class="small text-muted" v-if="realizadas[tipo] && !opciones[tipo].length">Sin resultados.</p>
+</div>
+<div class="col-md-6"><p class="text-muted">Registrada por: <strong>{{ operadorRegistrado }}</strong></p><label for="vencimiento" class="form-label">Vencimiento</label><input id="vencimiento" class="form-control" type="datetime-local" required v-model="formulario.fechaVencimiento" /></div>
+<div class="col-12">
+<label for="buscar-producto-reserva" class="form-label">Agregar producto</label>
+<div class="d-flex gap-2"><input id="buscar-producto-reserva" class="form-control" v-model="busquedas.Productos" v-on:input="programar('Productos')" maxlength="100" placeholder="Nombre o marca" /><button type="button" class="btn btn-outline-secondary" v-on:click="buscarOpciones('Productos')">Buscar</button></div>
+<ul class="list-group mt-2"><li v-for="producto in opciones.Productos" :key="producto.id" class="list-group-item d-flex justify-content-between align-items-center"><span>{{ producto.nombre }} · {{ moneda(producto.precio) }} · Stock: {{ producto.stock }}</span><button type="button" class="btn btn-sm btn-outline-primary" v-on:click="agregar(producto)" :disabled="producto.stock <= 0">Agregar</button></li></ul>
+<p class="small text-muted" v-if="realizadas.Productos && !opciones.Productos.length">Sin resultados.</p>
+</div></div>
+<div class="table-responsive mt-3"><table class="table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th><th></th></tr></thead>
+<tbody><tr v-for="(linea, indice) in formulario.detalles" :key="linea.idProducto"><td>{{ linea.nombre }}</td><td><input class="form-control" type="number" min="1" max="1000000" step="1" required v-model.number="linea.cantidad" :aria-label="'Cantidad de ' + linea.nombre" /></td><td>{{ moneda(linea.precioUnitario) }}</td><td>{{ moneda(linea.cantidad * linea.precioUnitario) }}</td><td><button type="button" class="btn btn-sm btn-outline-danger" v-on:click="formulario.detalles.splice(indice, 1)">Quitar</button></td></tr>
+<tr v-if="!formulario.detalles.length"><td colspan="5">Agregá al menos un producto.</td></tr></tbody></table></div>
+<p class="fw-bold">Total: {{ moneda(totalFormulario) }}</p>
+<p class="small text-muted">El servidor confirma precios y disponibilidad. Al editar se conserva el precio de los productos ya reservados.</p>
+<button class="btn btn-primary" v-if="!soloLectura">{{ guardando ? 'Guardando…' : 'Guardar reserva' }}</button>
+</fieldset></form>
+<button class="btn btn-outline-secondary mt-2 align-self-start" v-on:click="nuevo" :disabled="guardando">{{ editando ? 'Cerrar / nueva reserva' : 'Limpiar' }}</button>
+</section>
+<section aria-label="Listado de reservas">
+<form class="d-flex gap-2 mb-3" v-on:submit.prevent="cargar(1)"><input class="form-control" type="search" v-model="buscar" placeholder="Buscar por cliente o estado" aria-label="Buscar por cliente o estado" maxlength="100" /><button class="btn btn-outline-primary" :disabled="cargando">Buscar</button></form>
+<p v-if="cargando" role="status">Cargando…</p>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Número</th><th>Cliente / autor</th><th>Vencimiento</th><th>Estado</th><th>Total</th><th>Acciones</th></tr></thead>
+<tbody><tr v-for="item in elementos" :key="item.idReserva"><td>#{{ item.idReserva }}</td><td>{{ item.cliente }}<small class="d-block text-muted">{{ item.usuario }}</small></td><td>{{ fecha(item.fechaVencimiento) }}</td><td>{{ item.estadoReserva }}</td><td>{{ moneda(item.total) }}</td><td><button class="btn btn-sm btn-outline-primary me-2" :disabled="guardando" v-on:click="ver(item)">{{ item.estadoReserva === 'Pendiente' ? 'Ver / editar' : 'Ver detalle' }}</button><button v-if="item.estadoReserva === 'Pendiente'" class="btn btn-sm btn-outline-danger" :disabled="guardando" v-on:click="cancelarReserva(item)">Cancelar reserva</button></td></tr>
+<tr v-if="!cargando && !elementos.length"><td colspan="6">No hay reservas para esta búsqueda.</td></tr></tbody></table></div>
+<nav class="d-flex justify-content-between align-items-center" aria-label="Paginacion"><button class="btn btn-outline-secondary" :disabled="pagina <= 1 || cargando || guardando" v-on:click="cargar(pagina - 1)">Anterior</button><span>Página {{ pagina }} de {{ paginas }} · {{ total }} reservas</span><button class="btn btn-outline-secondary" :disabled="pagina >= paginas || cargando || guardando" v-on:click="cargar(pagina + 1)">Siguiente</button></nav>
+</section></div></div>
+@section Scripts {
+<script src="~/lib/vue/vue.global.prod.js" asp-append-version="true"></script>
+<script src="~/js/reservas.js" asp-append-version="true"></script>
+}

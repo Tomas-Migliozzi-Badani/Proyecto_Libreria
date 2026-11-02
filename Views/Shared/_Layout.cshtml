@@ -1,52 +1,58 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Proyecto_Libreria</title>
+    <title>@ViewData["Title"] - Librería</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Proyecto_Libreria.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Proyecto_Libreria</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Productos" asp-action="Index">Productos</a></li>
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Categorias" asp-action="Index">Categorías</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+<body data-login="@Url.Action("Login", "Cuenta")">
+<header>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
+<div class="container">
+    <a class="navbar-brand" asp-controller="Home" asp-action="Index">Librería</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="menu-principal">
+        <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" asp-controller="Catalogo" asp-action="Index">Catálogo</a></li>
+        @if (User.IsInRole("Cliente"))
+        {
+            <li class="nav-item"><a class="nav-link" asp-controller="MisReservas" asp-action="Index">Mis reservas</a></li>
+        }
+        @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+        {
+            <li class="nav-item"><a class="nav-link" asp-controller="Categorias" asp-action="Index">Categorías</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Productos" asp-action="Index">Productos</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Reservas" asp-action="Index">Reservas</a></li>
+        }
+        @if (User.IsInRole("Administrador"))
+        {
+            <li class="nav-item"><a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a></li>
+        }
+        </ul>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="nav-link text-dark me-3" asp-controller="Cuenta" asp-action="Perfil">@User.Identity.Name · Mi perfil</a>
+            <form asp-controller="Cuenta" asp-action="Logout" method="post"><button class="btn btn-outline-secondary">Cerrar sesión</button></form>
+        }
+        else
+        {
+            <a class="btn btn-outline-primary me-2" asp-controller="Cuenta" asp-action="Registro">Registrarme</a>
+            <a class="btn btn-primary" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+        }
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Proyecto_Libreria - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+</div>
+</nav>
+</header>
+<div class="container"><main role="main" class="pb-5">@RenderBody()</main></div>
+<footer class="border-top footer text-muted"><div class="container">&copy; 2026 - Librería</div></footer>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

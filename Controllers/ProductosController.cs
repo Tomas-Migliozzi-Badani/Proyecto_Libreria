@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Proyecto_Libreria.Data;
@@ -6,7 +7,8 @@ using Proyecto_Libreria.ViewModels;
 
 namespace Proyecto_Libreria.Controllers;
 
-// La autorizacion por rol se incorporara con el modulo de login.
+// Modulo de administracion para operadores autenticados.
+[Authorize(Roles = "Administrador,Empleado")]
 public class ProductosController : Controller
 {
     private readonly LibreriaContext _context;

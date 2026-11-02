@@ -1,0 +1,40 @@
+@{ ViewData["Title"] = "Usuarios"; }
+<div id="personas-app" data-tipo="Usuarios" data-base="@Url.Content("~/Usuarios")">
+@Html.AntiForgeryToken()
+<h1>Usuarios</h1>
+<div v-cloak>
+<div v-if="mensaje" class="alert" :class="error ? 'alert-danger' : 'alert-success'" role="status">{{ mensaje }}</div>
+<div class="row g-4">
+<section class="col-lg-4"><div class="card card-body">
+<h2 class="h5">{{ editando ? 'Editar registro' : 'Nuevo registro' }}</h2>
+<form v-on:submit.prevent="guardar"><fieldset :disabled="guardando">
+<label for="nombre" class="form-label">Nombre</label><input id="nombre" class="form-control" required maxlength="100" v-model="formulario.nombre" />
+<label for="apellido" class="form-label mt-2">Apellido</label><input id="apellido" class="form-control" required maxlength="100" v-model="formulario.apellido" />
+<label for="email" class="form-label mt-2">Email</label><input id="email" class="form-control" type="email" required maxlength="254" v-model="formulario.email" />
+<label for="rol" class="form-label mt-2">Rol</label>
+<select id="rol" class="form-select" v-model="formulario.rol"><option>Administrador</option><option>Empleado</option><option>Cliente</option></select>
+<div v-if="formulario.rol === 'Cliente'" class="border rounded p-2 mt-3">
+<label for="vincular-cliente" class="form-label">Vincular con cliente existente</label>
+<div class="d-flex gap-2"><input id="vincular-cliente" class="form-control" v-model="buscarCliente" maxlength="100" placeholder="Nombre o DNI" /><button type="button" class="btn btn-outline-secondary" v-on:click="buscarVinculos">Buscar</button></div>
+<ul class="list-group mt-2"><li v-for="opcion in clientesDisponibles" :key="opcion.id" class="list-group-item p-0"><button type="button" class="btn w-100 text-start" v-on:click="vincular(opcion)">{{ opcion.nombre }}</button></li></ul>
+<p class="small mt-2 mb-0">Vínculo seleccionado: <strong>{{ clienteNombre || 'Ninguno' }}</strong></p>
+</div>
+<label for="password" class="form-label mt-2">{{ editando ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</label>
+<input id="password" class="form-control" type="password" autocomplete="new-password" minlength="8" maxlength="100" :required="!editando" v-model="formulario.password" />
+<label class="form-check mt-3"><input type="checkbox" class="form-check-input" v-model="formulario.estado" /> Activo</label>
+<button class="btn btn-primary mt-3">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+<button v-if="editando" type="button" class="btn btn-outline-secondary ms-2 mt-3" v-on:click="cancelar">Cancelar</button>
+</fieldset></form></div></section>
+<section class="col-lg-8">
+<form class="d-flex gap-2 mb-3" v-on:submit.prevent="cargar(1)"><input class="form-control" type="search" aria-label="Buscar" placeholder="Buscar" maxlength="100" v-model="buscar" /><button class="btn btn-outline-primary" :disabled="cargando">Buscar</button></form>
+<p v-if="cargando" role="status">Cargando…</p>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Nombre</th><th>Email</th><th>Rol / estado</th><th>Acciones</th></tr></thead>
+<tbody><tr v-for="item in elementos" :key="item.id"><td>{{ item.apellido }}, {{ item.nombre }}</td><td>{{ item.email }}</td><td>{{ item.rol }} · {{ item.estado ? 'Activo' : 'Inactivo' }}<small v-if="item.rol === 'Cliente'" class="d-block">{{ item.clienteNombre || 'Sin vincular' }}</small></td>
+<td><button class="btn btn-sm btn-outline-primary me-2" :disabled="guardando" v-on:click="editar(item)">Editar</button><button v-if="item.estado" class="btn btn-sm btn-outline-danger" :disabled="guardando" v-on:click="eliminar(item)">Desactivar</button></td></tr>
+<tr v-if="!cargando && !elementos.length"><td colspan="4">No hay resultados.</td></tr></tbody></table></div>
+<nav class="d-flex justify-content-between align-items-center" aria-label="Paginacion"><button class="btn btn-outline-secondary" :disabled="pagina <= 1 || cargando || guardando" v-on:click="cargar(pagina - 1)">Anterior</button><span>Página {{ pagina }} de {{ paginas }} · {{ total }} registros</span><button class="btn btn-outline-secondary" :disabled="pagina >= paginas || cargando || guardando" v-on:click="cargar(pagina + 1)">Siguiente</button></nav>
+</section></div></div></div>
+@section Scripts {
+<script src="~/lib/vue/vue.global.prod.js" asp-append-version="true"></script>
+<script src="~/js/personas.js" asp-append-version="true"></script>
+}

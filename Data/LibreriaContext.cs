@@ -23,6 +23,10 @@ public class LibreriaContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Usuario>().HasOne(u => u.Cliente).WithOne()
+            .HasForeignKey<Usuario>(u => u.IdCliente).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Cliente>().Property(c => c.Dni).HasMaxLength(20);
+        modelBuilder.Entity<Cliente>().HasIndex(c => c.Dni).IsUnique();
         modelBuilder.Entity<Producto>().Property(p => p.Precio).HasPrecision(18, 2);
         modelBuilder.Entity<DetalleReserva>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
 

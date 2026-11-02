@@ -1,0 +1,14 @@
+@model Proyecto_Libreria.ViewModels.PerfilVista
+@{ ViewData["Title"] = "Mi perfil"; }
+<h1>Mi perfil</h1>
+<dl class="row"><dt class="col-sm-3">Nombre</dt><dd class="col-sm-9">@Model.Nombre @Model.Apellido</dd>
+<dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
+<dt class="col-sm-3">Rol</dt><dd class="col-sm-9">@Model.Rol</dd></dl>
+<p class="text-muted">La personalización del avatar se incorporará en la siguiente etapa.</p>
+
+@if (Model.Rol == "Cliente")
+{
+    if (!Model.Vinculado) { <div class="alert alert-warning">Tu cuenta antigua todavía no tiene datos de cliente vinculados. Solicitá al administrador que revise el vínculo en Usuarios.</div> }
+    <a class="btn btn-primary" asp-controller="Catalogo" asp-action="Index">Ver catálogo</a>
+    <a class="btn btn-outline-primary" asp-controller="MisReservas" asp-action="Index">Mis reservas</a>
+}

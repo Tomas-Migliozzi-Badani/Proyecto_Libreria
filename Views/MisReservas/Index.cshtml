@@ -1,0 +1,17 @@
+@{ ViewData["Title"] = "Mis reservas"; }
+<div id="mis-reservas-app" data-base="@Url.Content("~/MisReservas")">
+@Html.AntiForgeryToken()
+<div class="d-flex justify-content-between flex-wrap gap-2 mb-3"><h1>Mis reservas</h1><a class="btn btn-outline-primary align-self-start" asp-controller="Catalogo" asp-action="Index">Volver al catálogo</a></div>
+<p class="text-muted">Consultá el detalle de tus reservas o cancelá las que sigan pendientes.</p>
+<div v-cloak><div v-if="mensaje" class="alert" :class="error ? 'alert-danger' : 'alert-success'" role="status">{{ mensaje }}</div>
+<p v-if="cargando" role="status">Cargando…</p>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Número</th><th>Creada</th><th>Vencimiento</th><th>Estado</th><th>Total</th><th>Acciones</th></tr></thead><tbody>
+<tr v-for="reserva in elementos" :key="reserva.idReserva"><td>#{{ reserva.idReserva }}</td><td>{{ fecha(reserva.fechaReserva) }}</td><td>{{ fecha(reserva.fechaVencimiento) }}</td><td>{{ reserva.estadoReserva }}</td><td>{{ moneda(reserva.total) }}</td><td><button class="btn btn-sm btn-outline-primary me-2" v-on:click="ver(reserva)" :disabled="ocupado">Ver detalle</button><button v-if="reserva.estadoReserva === 'Pendiente'" class="btn btn-sm btn-outline-danger" v-on:click="cancelar(reserva)" :disabled="ocupado">Cancelar</button></td></tr>
+<tr v-if="!cargando && !elementos.length"><td colspan="6">Todavía no tenés reservas.</td></tr></tbody></table></div>
+<nav class="d-flex justify-content-between align-items-center" aria-label="Paginacion"><button class="btn btn-outline-secondary" :disabled="pagina <= 1 || cargando || ocupado" v-on:click="cargar(pagina - 1)">Anterior</button><span>{{ pagina }} / {{ paginas }} · {{ total }} reservas</span><button class="btn btn-outline-secondary" :disabled="pagina >= paginas || cargando || ocupado" v-on:click="cargar(pagina + 1)">Siguiente</button></nav>
+<section v-if="seleccionada" class="card card-body mt-4"><h2 class="h4">Detalle de reserva #{{ seleccionada.reserva.idReserva }}</h2><p>{{ seleccionada.reserva.estadoReserva }}</p><div class="table-responsive"><table class="table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead><tbody><tr v-for="(linea, indice) in seleccionada.detalles" :key="indice"><td>{{ linea.producto }}</td><td>{{ linea.cantidad }}</td><td>{{ moneda(linea.precioUnitario) }}</td><td>{{ moneda(linea.subtotal) }}</td></tr></tbody></table></div><button class="btn btn-outline-secondary align-self-start" v-on:click="seleccionada = null">Cerrar detalle</button></section>
+</div></div>
+@section Scripts {
+<script src="~/lib/vue/vue.global.prod.js" asp-append-version="true"></script>
+<script src="~/js/mis-reservas.js" asp-append-version="true"></script>
+}
