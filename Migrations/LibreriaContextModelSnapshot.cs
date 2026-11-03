@@ -211,6 +211,9 @@ namespace Proyecto_Libreria.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<int>("VersionToken")
+                        .HasColumnType("int");
+
                     b.HasKey("IdUsuario");
 
                     b.HasIndex("Email")

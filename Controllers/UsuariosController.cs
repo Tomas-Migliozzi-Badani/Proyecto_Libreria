@@ -76,10 +76,17 @@ public class UsuariosController : Controller
             if (await _context.Usuarios.AnyAsync(u => u.IdCliente == f.IdCliente && u.IdUsuario != usuario.IdUsuario))
                 return Conflict(new { mensaje = "Ese cliente ya tiene otra cuenta vinculada." });
         }
-        usuario.IdCliente = f.Rol == "Cliente" ? f.IdCliente : null;
+        var nuevoCliente = f.Rol == "Cliente" ? f.IdCliente : null;
+        if (!nuevo && (usuario.Rol != f.Rol || usuario.Estado != f.Estado
+            || usuario.Email != email || usuario.IdCliente != nuevoCliente)) usuario.VersionToken++;
+        usuario.IdCliente = nuevoCliente;
         usuario.Nombre = f.Nombre.Trim(); usuario.Apellido = f.Apellido.Trim(); usuario.Email = email;
         usuario.Rol = f.Rol; usuario.Estado = f.Estado;
-        if (!string.IsNullOrEmpty(f.Password)) usuario.Password = _hasher.HashPassword(usuario, f.Password);
+        if (!string.IsNullOrEmpty(f.Password))
+        {
+            usuario.Password = _hasher.HashPassword(usuario, f.Password);
+            usuario.VersionToken++;
+        }
         if (nuevo) _context.Usuarios.Add(usuario);
         try { await _context.SaveChangesAsync(); }
         catch (DbUpdateException) { return Conflict(new { mensaje = "No se pudo guardar. Revisa si el email ya existe." }); }
@@ -93,6 +100,7 @@ public class UsuariosController : Controller
         if (usuario.IdUsuario.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier))
             return BadRequest(new { mensaje = "No podes desactivar tu propia cuenta." });
         usuario.Estado = false;
+        usuario.VersionToken++;
         await _context.SaveChangesAsync();
         return Json(new { mensaje = "Usuario desactivado. Su historial se conserva." });
     }

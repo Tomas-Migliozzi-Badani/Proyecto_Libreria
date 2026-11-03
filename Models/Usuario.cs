@@ -13,6 +13,8 @@ public class Usuario
     public string Password { get; set; } = "";
     public string Rol { get; set; } = "";
     public bool Estado { get; set; }
+    // Cambiar la contrasena o cerrar sesiones API invalida tokens anteriores.
+    public int VersionToken { get; set; }
     public string Avatar { get; set; } = "";
 
     // Solo las cuentas de clientes necesitan esta vinculacion.

@@ -10,7 +10,7 @@ Desde la carpeta que contiene `Proyecto_Libreria.csproj`:
 
 1. Ejecutar `dotnet restore` y `dotnet tool restore`.
 2. Copiar `appsettings.Local.example.json` a `appsettings.Local.json`.
-3. Editar la conexion del archivo local con servidor, puerto, usuario y password propios. Usar una base nueva dedicada, sugerida: `Libreria`. Este archivo esta excluido de Git.
+3. Editar la conexion del archivo local con servidor, puerto, usuario y password propios. Configurar tambien TokenAuthentication:SecretKey con una clave aleatoria de al menos 32 bytes; ver docs/api/Guia_API_JWT.md. Usar una base nueva dedicada, sugerida: `Libreria`. Este archivo esta excluido de Git.
 4. Ejecutar `dotnet ef database update`. Se requieren permisos para crear la base y tablas, o una base vacia creada previamente.
 5. Ejecutar `dotnet run` y abrir la direccion indicada en la terminal.
 6. Entrar en Iniciar sesion. En Development se crean las cuentas de demostracion indicadas abajo.
@@ -113,11 +113,11 @@ Registro de dos clientes, rechazo de DNI/email repetidos y passwords que no coin
 | ABM Vue/AJAX sin recargar | Implementado | Controllers/, Views/ y wwwroot/js/ |
 | Paginado de servidor | Implementado | Listar en los controladores |
 | Seleccion asincrona | Implementado | Reservas/BuscarClientes y BuscarProductos |
-| API JWT | Pendiente | Proxima etapa |
+| API JWT | Implementado | Controllers/Api/, Services/JwtService.cs, docs/api/Guia_API_JWT.md |
 | Diagramas DER/clases | Pendiente | docs/ |
 | SQL y datos para promocionar | Parcial | Migracion inicial y cuentas demo; falta exportacion completa |
 | Evidencias finales con enlaces/capturas | Pendiente | Agregar tras cerrar funcionalidades |
-| Coleccion de pruebas API | Pendiente | Se incluira junto con JWT |
+| Coleccion de pruebas API | Implementado | docs/api/Libreria_API.postman_collection.json |
 
 No se hicieron commits ni push de las etapas recientes: los realiza el estudiante.
 
@@ -126,3 +126,14 @@ No se hicieron commits ni push de las etapas recientes: los realiza el estudiant
 `dotnet ef migrations has-pending-model-changes` verifica consistencia del modelo. `dotnet ef migrations script` genera SQL sin aplicarlo.
 
 Solo para pruebas en entornos restringidos, `DataProtection__KeysPath` permite configurar una carpeta privada escribible para las claves en Development. Sin esa opcion se mantiene el almacenamiento predeterminado de ASP.NET. No versionar ni compartir las claves.
+
+
+## API JWT
+
+Implementada siguiendo los apuntes Web_API_1.pdf y Autenticacion_con_JWT_1.pdf. Login API: POST /api/auth/login. Enviar el accessToken en Authorization: Bearer para consumir productos, categorias, clientes y reservas segun el rol. La web conserva su login con cookies; la API exige JWT.
+
+Guia teorica/practica: docs/api/Guia_API_JWT.md. Coleccion importable: docs/api/Libreria_API.postman_collection.json, con 21 peticiones y tests de resultado. No contiene tokens reales ni clave de firma.
+
+La clave se guarda en appsettings.Local.json (ignorado y excluido de la publicacion), o en TokenAuthentication__SecretKey. No publicar ni compartir esta clave. Las cuentas demo conservan las credenciales documentadas arriba.
+
+Access tokens de 30 minutos, algoritmo HS256, validacion de firma/emisor/audiencia/vencimiento y estado actual de cuenta. VersionToken permite revocar JWT por cambio de password o logout API. Requiere aplicar la migracion VersionarTokensJwt al instalar. No se agregaron refresh tokens ni un frontend separado.

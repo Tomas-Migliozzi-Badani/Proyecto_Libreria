@@ -1,3 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Proyecto_Libreria.Filters;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Threading.RateLimiting;
 using Proyecto_Libreria.Services;
@@ -16,6 +20,9 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true)
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ReservasService>();
 builder.Services.AddScoped<SesionCookieEvents>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<JwtUsuarioEvents>();
+builder.Services.AddScoped<ApiExceptionFilter>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
     options.LoginPath = "/Cuenta/Login";
@@ -28,6 +35,26 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     options.SlidingExpiration = true;
     options.EventsType = typeof(SesionCookieEvents);
 });
+// La web conserva Cookies por defecto. Cada controlador API exige explicitamente Bearer.
+var jwtSecret = builder.Configuration["TokenAuthentication:SecretKey"];
+if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret) < 32 || jwtSecret.StartsWith("REEMPLAZAR_"))
+    throw new InvalidOperationException("Configura TokenAuthentication:SecretKey con una clave aleatoria de al menos 32 bytes en appsettings.Local.json.");
+builder.Services.AddAuthentication().AddJwtBearer(options =>
+{
+    options.MapInboundClaims = false;
+    options.IncludeErrorDetails = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true,
+        ValidateIssuerSigningKey = true, RequireExpirationTime = true, RequireSignedTokens = true,
+        ValidIssuer = builder.Configuration["TokenAuthentication:Issuer"],
+        ValidAudience = builder.Configuration["TokenAuthentication:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+        ClockSkew = TimeSpan.FromSeconds(30), NameClaimType = "name", RoleClaimType = "role"
+    };
+    options.EventsType = typeof(JwtUsuarioEvents);
+});
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
@@ -37,6 +64,9 @@ builder.Services.AddRateLimiter(options =>
         context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
         await context.HttpContext.Response.WriteAsync("Demasiados intentos. Espera un minuto antes de volver a iniciar sesion.", cancellationToken);
     };
+    options.AddPolicy("api-login", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "local",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("registro", context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "local",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -84,6 +114,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
