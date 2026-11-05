@@ -1,0 +1,58 @@
+{
+  "fecha": "2026-11-05",
+  "entorno": "Copia limpia y base MySQL temporal, sin usar datos personales",
+  "pruebas": [
+    {
+      "prueba": "Login administrador SQL demo",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Login empleado SQL demo",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Login cliente SQL demo",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Empleado no administra Usuarios",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cliente no administra Productos",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Catalogo publico con paginado",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Paginado de clientes desde servidor",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Una reserva con cinco detalles",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cliente no consulta reserva de otra persona",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Busqueda asincrona devuelve acotado",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Producto solo contiene el stock restante inicial",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Subir imagen demo al producto",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Subir avatar demo",
+      "resultado": "OK"
+    }
+  ]
+}

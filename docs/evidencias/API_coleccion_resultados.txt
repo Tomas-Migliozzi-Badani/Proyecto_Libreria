@@ -1,0 +1,22 @@
+200 Login administrador
+200 Mi identidad JWT
+200 Consultar categorias y elegir una activa
+200 Listar productos
+200 Buscar clientes (personal)
+201 Crear producto de prueba
+200 Consultar producto creado
+204 Editar producto de prueba
+200 Login cliente de demostracion
+201 Reservar como cliente
+200 Mis reservas
+200 Detalle propio
+401 Sin token devuelve 401
+403 Cliente no consulta datos de clientes - 403
+403 Cliente no crea productos - 403
+404 Reserva inexistente - 404
+204 Cancelar reserva propia
+204 Cancelar otra vez no duplica stock
+204 Desactivar producto de prueba
+204 Invalidar tokens del administrador
+401 Token anterior ya no sirve - 401
+PASS: 21 comprobaciones de la coleccion ejecutadas contra MySQL.

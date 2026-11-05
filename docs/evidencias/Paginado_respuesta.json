@@ -1,0 +1,88 @@
+{
+  "solicitud": "GET /Productos/Listar?pagina=2",
+  "estadoHTTP": 200,
+  "respuesta": {
+    "elementos": [
+      {
+        "idProducto": 6,
+        "nombre": "Lapicera negra",
+        "marca": "Escritura",
+        "precio": 700.0,
+        "stock": 30,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 2,
+        "categoriaNombre": "Escritura"
+      },
+      {
+        "idProducto": 7,
+        "nombre": "Lapiz negro HB",
+        "marca": "Escritura",
+        "precio": 400.0,
+        "stock": 40,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 2,
+        "categoriaNombre": "Escritura"
+      },
+      {
+        "idProducto": 8,
+        "nombre": "Marcador permanente",
+        "marca": "Escritura",
+        "precio": 1200.0,
+        "stock": 20,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 2,
+        "categoriaNombre": "Escritura"
+      },
+      {
+        "idProducto": 11,
+        "nombre": "Pincel numero 6",
+        "marca": "Arte",
+        "precio": 1100.0,
+        "stock": 25,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 3,
+        "categoriaNombre": "Arte y dibujo"
+      },
+      {
+        "idProducto": 17,
+        "nombre": "Producto prueba Postman editado",
+        "marca": "Demostracion",
+        "precio": 1600.5,
+        "stock": 10,
+        "estado": false,
+        "imagen": "",
+        "idCategoria": 3,
+        "categoriaNombre": "Arte y dibujo"
+      },
+      {
+        "idProducto": 3,
+        "nombre": "Resma A4 80 gramos",
+        "marca": "Papel",
+        "precio": 6500.0,
+        "stock": 17,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 1,
+        "categoriaNombre": "Cuadernos y papel"
+      },
+      {
+        "idProducto": 14,
+        "nombre": "Separadores de colores",
+        "marca": "Orden",
+        "precio": 1600.0,
+        "stock": 20,
+        "estado": true,
+        "imagen": "",
+        "idCategoria": 4,
+        "categoriaNombre": "Organizacion"
+      }
+    ],
+    "total": 17,
+    "pagina": 2,
+    "paginas": 2
+  }
+}
