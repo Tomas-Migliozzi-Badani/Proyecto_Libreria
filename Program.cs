@@ -19,6 +19,7 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true)
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ReservasService>();
+builder.Services.AddScoped<ImagenesService>();
 builder.Services.AddScoped<SesionCookieEvents>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<JwtUsuarioEvents>();

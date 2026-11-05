@@ -23,7 +23,7 @@ public class CatalogoController : Controller
         var paginas = Math.Max(1, (int)Math.Ceiling(total / 9d)); pagina = Math.Clamp(pagina, 1, paginas);
         var elementos = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((pagina - 1) * 9).Take(9)
-            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, categoria = p.Categoria.Nombre }).ToListAsync();
+            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Imagen, categoria = p.Categoria.Nombre }).ToListAsync();
         return Json(new { elementos, total, paginas, pagina });
     }
 }

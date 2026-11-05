@@ -4,7 +4,26 @@
 <dl class="row"><dt class="col-sm-3">Nombre</dt><dd class="col-sm-9">@Model.Nombre @Model.Apellido</dd>
 <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
 <dt class="col-sm-3">Rol</dt><dd class="col-sm-9">@Model.Rol</dd></dl>
-<p class="text-muted">La personalización del avatar se incorporará en la siguiente etapa.</p>
+<section class="card card-body mb-4" aria-labelledby="avatar-titulo">
+<h2 id="avatar-titulo" class="h5">Mi avatar</h2>
+@if (!string.IsNullOrEmpty(Model.Avatar))
+{
+    <img src="@Url.Content("~/imagenes/" + Model.Avatar)" alt="Mi avatar" width="120" height="120" class="rounded-circle mb-3" style="object-fit:cover" />
+}
+else { <p class="text-muted">Todavía no cargaste una foto.</p> }
+@if (TempData["ErrorAvatar"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+@if (TempData["AvatarExitoso"] is string mensaje) { <div class="alert alert-success" role="status">@mensaje</div> }
+<form asp-action="Avatar" method="post" enctype="multipart/form-data">
+    <label for="archivo-avatar" class="form-label">Elegir foto</label>
+    <input id="archivo-avatar" name="archivo" type="file" accept="image/jpeg,image/png" required class="form-control" aria-describedby="ayuda-avatar" />
+    <p id="ayuda-avatar" class="form-text">JPG o PNG, hasta 2 MB y 4096 píxeles por lado (12 megapíxeles). La foto será pública. Elegí una imagen sin datos privados.</p>
+    <button class="btn btn-primary" type="submit">Guardar avatar</button>
+</form>
+@if (!string.IsNullOrEmpty(Model.Avatar))
+{
+    <form asp-action="QuitarAvatar" method="post" class="mt-2"><button class="btn btn-outline-danger" type="submit">Quitar avatar</button></form>
+}
+</section>
 
 @if (Model.Rol == "Cliente")
 {

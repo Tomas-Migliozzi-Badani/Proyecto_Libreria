@@ -17,7 +17,8 @@ public class CuentaController : Controller
 {
     private readonly LibreriaContext _context;
     private readonly PasswordHasher<Usuario> _hasher = new();
-    public CuentaController(LibreriaContext context) => _context = context;
+    private readonly ImagenesService _imagenes;
+    public CuentaController(LibreriaContext context, ImagenesService imagenes) { _context = context; _imagenes = imagenes; }
 
     [AllowAnonymous, HttpGet]
     public IActionResult Login(string? returnUrl)
@@ -115,9 +116,37 @@ public class CuentaController : Controller
     {
         var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var usuario = await _context.Usuarios.AsNoTracking().Where(u => u.IdUsuario == id)
-            .Select(u => new PerfilVista { Vinculado = u.IdCliente != null, Nombre = u.Nombre, Apellido = u.Apellido, Email = u.Email, Rol = u.Rol }).SingleAsync();
+            .Select(u => new PerfilVista { Avatar = u.Avatar, Vinculado = u.IdCliente != null, Nombre = u.Nombre, Apellido = u.Apellido, Email = u.Email, Rol = u.Rol }).SingleAsync();
         return View(usuario);
     }
+    [HttpPost, ValidateAntiForgeryToken, RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> Avatar(IFormFile? archivo)
+    {
+        // El propietario se obtiene de la sesion, nunca de un ID del formulario.
+        var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var usuario = await _context.Usuarios.SingleAsync(u => u.IdUsuario == id);
+        string nombre;
+        try { nombre = await _imagenes.Guardar(archivo); }
+        catch (ArgumentException ex) { TempData["ErrorAvatar"] = ex.Message; return RedirectToAction(nameof(Perfil)); }
+        var anterior = usuario.Avatar;
+        usuario.Avatar = nombre;
+        try { await _context.SaveChangesAsync(); }
+        catch { _imagenes.Borrar(nombre); throw; }
+        _imagenes.Borrar(anterior);
+        TempData["AvatarExitoso"] = "Tu avatar fue actualizado.";
+        return RedirectToAction(nameof(Perfil));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarAvatar()
+    {
+        var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var usuario = await _context.Usuarios.SingleAsync(u => u.IdUsuario == id);
+        var anterior = usuario.Avatar; usuario.Avatar = "";
+        await _context.SaveChangesAsync(); _imagenes.Borrar(anterior);
+        return RedirectToAction(nameof(Perfil));
+    }
+
     [AllowAnonymous, HttpGet]
     public IActionResult AccesoDenegado() { Response.StatusCode = 403; return View(); }
 }

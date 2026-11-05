@@ -1,5 +1,5 @@
 @{ ViewData["Title"] = "Catalogo"; }
-<div id="catalogo-app" data-base="@Url.Content("~/Catalogo")" data-confirmar="@Url.Action("Crear", "MisReservas")" data-cliente="@User.IsInRole("Cliente").ToString().ToLowerInvariant()" data-autenticado="@((User.Identity?.IsAuthenticated == true).ToString().ToLowerInvariant())">
+<div id="catalogo-app" data-imagenes="@Url.Content("~/imagenes/")" data-base="@Url.Content("~/Catalogo")" data-confirmar="@Url.Action("Crear", "MisReservas")" data-cliente="@User.IsInRole("Cliente").ToString().ToLowerInvariant()" data-autenticado="@((User.Identity?.IsAuthenticated == true).ToString().ToLowerInvariant())">
 @Html.AntiForgeryToken()
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h1>Catálogo de la librería</h1><p class="text-muted">Elegí tus productos y reservalos para retirar en el local.</p></div><a asp-controller="MisReservas" asp-action="Index" class="btn btn-outline-primary" style="display:@(User.IsInRole("Cliente") ? "inline-block" : "none")">Mis reservas</a></div>
 <div v-cloak>
@@ -9,6 +9,7 @@
 <form class="d-flex gap-2 mb-3" v-on:submit.prevent="cargar(1)"><input class="form-control" type="search" v-model="buscar" maxlength="100" aria-label="Buscar productos" placeholder="Buscar por nombre o marca" /><button class="btn btn-outline-primary" :disabled="cargando">Buscar</button></form>
 <p v-if="cargando" role="status">Cargando productos…</p>
 <div class="row g-3"><article class="col-md-6 col-xl-4" v-for="producto in productos" :key="producto.idProducto"><div class="card h-100"><div class="card-body d-flex flex-column">
+<img v-if="producto.imagen" :src="imagenUrl(producto.imagen)" :alt="producto.nombre" class="w-100 mb-3" height="180" style="object-fit:contain" loading="lazy" />
 <small class="text-muted">{{ producto.categoria }}</small><h2 class="h5 mt-1">{{ producto.nombre }}</h2><p class="text-muted">{{ producto.marca }}</p><p class="fs-5 fw-bold">{{ moneda(producto.precio) }}</p>
 <p :class="producto.stock > 0 ? 'text-success' : 'text-secondary'">{{ producto.stock > 0 ? 'Disponibles: ' + producto.stock : 'Sin stock' }}</p>
 <div class="mt-auto"><label :for="'cantidad-' + producto.idProducto" class="form-label">Cantidad</label><input :id="'cantidad-' + producto.idProducto" class="form-control mb-2" type="number" min="1" :max="producto.stock" step="1" v-model.number="cantidades[producto.idProducto]" :disabled="producto.stock <= 0 || guardando" />

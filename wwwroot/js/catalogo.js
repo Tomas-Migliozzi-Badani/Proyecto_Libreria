@@ -14,6 +14,7 @@ Vue.createApp({
         this.cargar(1);
     },
     methods: {
+        imagenUrl(nombre) { return document.getElementById("catalogo-app").dataset.imagenes + encodeURIComponent(nombre); },
         moneda(valor) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(valor); },
         async cargar(pagina) {
             const numero = ++this.solicitud; this.cargando = true;

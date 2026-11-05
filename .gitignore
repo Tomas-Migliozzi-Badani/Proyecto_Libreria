@@ -4,3 +4,6 @@
 
 # Credenciales propias de cada equipo
 appsettings.Local.json
+
+# Imagenes cargadas: respaldar junto con la base de datos
+App_Data/imagenes/

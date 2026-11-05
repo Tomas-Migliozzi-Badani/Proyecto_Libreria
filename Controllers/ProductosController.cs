@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Proyecto_Libreria.Data;
 using Proyecto_Libreria.Models;
+using Proyecto_Libreria.Services;
 using Proyecto_Libreria.ViewModels;
 
 namespace Proyecto_Libreria.Controllers;
@@ -12,7 +13,8 @@ namespace Proyecto_Libreria.Controllers;
 public class ProductosController : Controller
 {
     private readonly LibreriaContext _context;
-    public ProductosController(LibreriaContext context) => _context = context;
+    private readonly ImagenesService _imagenes;
+    public ProductosController(LibreriaContext context, ImagenesService imagenes) { _context = context; _imagenes = imagenes; }
 
     [HttpGet]
     public IActionResult Index() => View();
@@ -33,7 +35,7 @@ public class ProductosController : Controller
         var elementos = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((pagina - 1) * tamanio).Take(tamanio)
             .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock,
-                p.Estado, p.IdCategoria, categoriaNombre = p.Categoria.Nombre }).ToListAsync();
+                p.Estado, p.Imagen, p.IdCategoria, categoriaNombre = p.Categoria.Nombre }).ToListAsync();
         return Json(new { elementos, total, pagina, paginas });
     }
 
@@ -81,6 +83,31 @@ public class ProductosController : Controller
         CopiarDatos(producto, formulario);
         await _context.SaveChangesAsync();
         return Json(new { mensaje = "Producto actualizado." });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> SubirImagen(int id, IFormFile? archivo)
+    {
+        var producto = await _context.Productos.FindAsync(id);
+        if (producto is null) return NotFound(new { mensaje = "El producto no existe." });
+        string nombre;
+        try { nombre = await _imagenes.Guardar(archivo); }
+        catch (ArgumentException ex) { return BadRequest(new { mensaje = ex.Message }); }
+        var anterior = producto.Imagen; producto.Imagen = nombre;
+        try { await _context.SaveChangesAsync(); }
+        catch { _imagenes.Borrar(nombre); throw; }
+        _imagenes.Borrar(anterior);
+        return Json(new { mensaje = "Imagen actualizada.", imagen = nombre });
+    }
+
+    [HttpDelete, ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarImagen(int id)
+    {
+        var producto = await _context.Productos.FindAsync(id);
+        if (producto is null) return NotFound(new { mensaje = "El producto no existe." });
+        var anterior = producto.Imagen; producto.Imagen = "";
+        await _context.SaveChangesAsync(); _imagenes.Borrar(anterior);
+        return Json(new { mensaje = "Imagen quitada." });
     }
 
     private static void CopiarDatos(Producto producto, ProductoFormulario formulario)

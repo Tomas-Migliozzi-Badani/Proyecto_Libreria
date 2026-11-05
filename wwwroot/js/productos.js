@@ -3,12 +3,31 @@ Vue.createApp({
     data() {
         return { elementos: [], buscar: '', pagina: 1, paginas: 1, total: 0,
             formulario: { nombre: '', marca: '', precio: 0.01, stock: 0, idCategoria: 0, estado: true }, editando: null,
-            cargando: false, guardando: false, mensaje: '', error: false, solicitud: 0, 
-            busquedaCategoria: '', categoriaSeleccionada: '', opcionesCategoria: [], buscandoCategorias: false, 
+            imagenArchivo: null, imagenActual: '', cargando: false, guardando: false, mensaje: '', error: false, solicitud: 0,
+            busquedaCategoria: '', categoriaSeleccionada: '', opcionesCategoria: [], buscandoCategorias: false,
             busquedaRealizada: false, busquedaNumero: 0, temporizador: null };
     },
     mounted() { this.cargar(1); },
     methods: {
+        imagenUrl(nombre) { return document.getElementById('productos-app').dataset.imagenes + encodeURIComponent(nombre); },
+        seleccionarImagen(evento) {
+            const archivo = evento.target.files[0];
+            if (archivo && (archivo.size > 2 * 1024 * 1024 || !/\.(jpe?g|png)$/i.test(archivo.name))) {
+                this.error = true; this.mensaje = 'Selecciona un JPG o PNG de hasta 2 MB.';
+                evento.target.value = ''; this.imagenArchivo = null; return;
+            }
+            this.imagenArchivo = archivo || null;
+        },
+        async quitarImagen() {
+            if (this.guardando || !confirm('¿Quitar la imagen actual?')) return;
+            this.guardando = true;
+            try {
+                await this.solicitar(`QuitarImagen?id=${this.editando}`, { method: 'DELETE' });
+                this.imagenActual = ''; this.mensaje = 'Imagen quitada.'; this.error = false;
+                await this.cargar(this.pagina);
+            } catch (e) { this.mensaje = e.message; this.error = true; }
+            finally { this.guardando = false; }
+        },
         moneda(valor) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(valor); },
         programarBusqueda() { clearTimeout(this.temporizador); this.temporizador = setTimeout(() => this.buscarCategorias(), 300); },
         async buscarCategorias() {
@@ -30,7 +49,7 @@ Vue.createApp({
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const respuesta = await fetch(`${base}/${accion}`, {
                 ...opciones,
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token }
+                headers: { ...(opciones.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token }
             });
             if (respuesta.status === 401) {
                 window.location.assign(document.body.dataset.login + '?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
@@ -54,13 +73,14 @@ Vue.createApp({
         },
         editar(producto) {
             clearTimeout(this.temporizador); ++this.busquedaNumero; this.buscandoCategorias = false; this.busquedaRealizada = false;
+            this.imagenArchivo = null; this.imagenActual = producto.imagen || ''; document.getElementById('imagen-producto').value = '';
             this.editando = producto.idProducto;
             this.formulario = { nombre: producto.nombre, marca: producto.marca, precio: producto.precio,
                 stock: producto.stock, idCategoria: producto.idCategoria, estado: producto.estado };
             this.categoriaSeleccionada = producto.categoriaNombre; this.opcionesCategoria = [];
             this.mensaje = ''; document.getElementById('nombre-producto').focus();
         },
-        cancelar() { clearTimeout(this.temporizador); ++this.busquedaNumero; this.buscandoCategorias = false; this.categoriaSeleccionada = ''; this.opcionesCategoria = []; this.busquedaCategoria = ''; this.busquedaRealizada = false; this.editando = null; this.formulario = { nombre: '', marca: '', precio: 0.01, stock: 0, idCategoria: 0, estado: true }; },
+        cancelar() { this.imagenArchivo = null; this.imagenActual = ''; document.getElementById('imagen-producto').value = '';  clearTimeout(this.temporizador); ++this.busquedaNumero; this.buscandoCategorias = false; this.categoriaSeleccionada = ''; this.opcionesCategoria = []; this.busquedaCategoria = ''; this.busquedaRealizada = false; this.editando = null; this.formulario = { nombre: '', marca: '', precio: 0.01, stock: 0, idCategoria: 0, estado: true }; },
         async guardar() {
             if (this.guardando) return;
             if (!this.formulario.nombre.trim()) { this.error = true; this.mensaje = 'El nombre es obligatorio.'; return; }
@@ -70,6 +90,15 @@ Vue.createApp({
                 const datos = await this.solicitar(this.editando ? `Editar?id=${this.editando}` : 'Crear', {
                     method: this.editando ? 'PUT' : 'POST', body: JSON.stringify(this.formulario)
                 });
+                this.editando = this.editando || datos.idProducto;
+                if (this.imagenArchivo) {
+                    const cuerpo = new FormData(); cuerpo.append('archivo', this.imagenArchivo);
+                    try { await this.solicitar(`SubirImagen?id=${this.editando}`, { method: 'POST', body: cuerpo }); }
+                    catch (e) {
+                        await this.cargar(this.pagina);
+                        throw new Error('Los datos del producto se guardaron. La imagen no se pudo cargar: ' + e.message + ' Podes corregirla y guardar de nuevo.');
+                    }
+                }
                 this.mensaje = datos.mensaje; this.error = false;
                 this.cancelar(); await this.cargar(this.pagina);
             } catch (e) { this.mensaje = e.message; this.error = true; }

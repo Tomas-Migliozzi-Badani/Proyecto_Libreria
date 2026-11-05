@@ -66,7 +66,7 @@ La confirmacion toma el cliente y el autor desde la identidad autenticada y el p
 ## ABM implementados
 
 - `/Categorias`: alta, edicion, busqueda, baja logica y reactivacion.
-- `/Productos`: nombre, marca, precio positivo, stock entero no negativo y categoria. Busqueda de categoria por AJAX, con hasta diez coincidencias activas. Se puede conservar una categoria historica inactiva al editar. La subida de imagenes todavia esta pendiente.
+- `/Productos`: nombre, marca, precio positivo, stock entero no negativo y categoria. Busqueda de categoria por AJAX, con hasta diez coincidencias activas. Se puede conservar una categoria historica inactiva al editar. Permite cargar, reemplazar y quitar una imagen JPG/PNG mediante AJAX.
 - `/Clientes`: datos personales y contacto; DNI de 7 a 9 digitos sin puntos. Rechaza DNI repetido. Un cliente con reservas no puede eliminarse.
 - `/Usuarios`: nombre, email unico, password, rol y estado. En edicion, password vacio conserva el anterior. El hash nunca se devuelve al navegador.
 - `/Reservas`: alta, consulta, modificacion de pendientes y cancelacion. Un producto por detalle, con cantidad y precio unitario. Clientes y productos se buscan por AJAX sin descargar todo el catalogo.
@@ -108,8 +108,8 @@ Registro de dos clientes, rechazo de DNI/email repetidos y passwords que no coin
 |---|---|---|
 | Seis tablas, 1:N y N:M con tabla intermedia | Implementado | Models/, Migrations/; DetalleReserva une Reserva y Producto |
 | Login/logout y roles | Implementado | CuentaController, SesionCookieEvents, Program.cs y Authorize |
-| Avatar personalizado | Pendiente | Proxima etapa de archivos |
-| Archivo adicional al avatar | Pendiente | Imagen de producto |
+| Avatar personalizado | Implementado | Cuenta/Perfil, CuentaController y Services/ImagenesService.cs |
+| Archivo adicional al avatar | Implementado | Productos/SubirImagen, Catalogo y Services/ImagenesService.cs |
 | ABM Vue/AJAX sin recargar | Implementado | Controllers/, Views/ y wwwroot/js/ |
 | Paginado de servidor | Implementado | Listar en los controladores |
 | Seleccion asincrona | Implementado | Reservas/BuscarClientes y BuscarProductos |
@@ -137,3 +137,15 @@ Guia teorica/practica: docs/api/Guia_API_JWT.md. Coleccion importable: docs/api/
 La clave se guarda en appsettings.Local.json (ignorado y excluido de la publicacion), o en TokenAuthentication__SecretKey. No publicar ni compartir esta clave. Las cuentas demo conservan las credenciales documentadas arriba.
 
 Access tokens de 30 minutos, algoritmo HS256, validacion de firma/emisor/audiencia/vencimiento y estado actual de cuenta. VersionToken permite revocar JWT por cambio de password o logout API. Requiere aplicar la migracion VersionarTokensJwt al instalar. No se agregaron refresh tokens ni un frontend separado.
+
+## Avatares e imagenes de productos
+
+Desde Mi perfil, cada usuario carga/reemplaza o quita su avatar. Desde Productos, el administrador o empleado selecciona una imagen al crear o editar: los datos y luego la foto se envian sin recargar la pagina. Si falla solamente la foto, los datos quedan guardados y el formulario permite reintentar sin duplicar el producto. El catalogo muestra la imagen guardada.
+
+Se aceptan JPG/PNG de hasta 2 MB, 4096 pixeles por lado y 12 megapixeles. SkiaSharp valida y decodifica el contenido, y lo recodifica a PNG; no basta con cambiar la extension. Los nombres son GUID generados en el servidor. Los POST/DELETE web requieren antiforgery; el avatar pertenece siempre a la cuenta de la sesion y las fotos de productos solo las cambia el personal.
+
+Las fotos son publicas y se sirven mediante `/imagenes/{nombre}` como image/png, con nosniff. Se almacenan en `App_Data/imagenes`, fuera de wwwroot y de Git. MySQL guarda solo el nombre. No requieren migracion nueva porque Avatar e Imagen ya existian. La API devuelve Imagen como nombre; su URL es `/imagenes/` seguida de ese nombre. La carga se realiza desde la web MVC.
+
+**Respaldo:** copiar `App_Data/imagenes` junto con la base de datos. En otro equipo la carpeta se crea con la primera carga y la cuenta que ejecuta la app debe tener permiso de escritura. Publicar la app no copia imagenes personales ni las elimina; conservar/restaurar esa carpeta en el despliegue. No se deben borrar fotos desde el explorador mientras la base las referencia. Para una entrega con fotos precargadas se debe proporcionar tambien su carpeta de respaldo.
+
+Guia practica y explicacion: [docs/Imagenes.md](docs/Imagenes.md). Se verificaron carga JPG/PNG, reemplazo y eliminacion, catalogo, identidad del avatar, acceso por roles, antiforgery, formato falso, tamano excesivo, dimensiones excesivas y archivos dañados mediante pruebas HTTP contra MySQL.

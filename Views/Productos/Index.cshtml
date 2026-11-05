@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = "Productos";
 }
-<div id="productos-app" data-base="@Url.Content("~/Productos")">
+<div id="productos-app" data-imagenes="@Url.Content("~/imagenes/")" data-base="@Url.Content("~/Productos")">
     @Html.AntiForgeryToken()
     <h1>Productos</h1>
     <p class="text-muted">Organizá los productos de la librería. Podés reactivar un producto desde Editar.</p>
@@ -38,6 +38,11 @@
                             <input id="estado-producto" type="checkbox" class="form-check-input" v-model="formulario.estado" :disabled="guardando" />
                             <label for="estado-producto" class="form-check-label">Activo</label>
                         </div>
+                        <label for="imagen-producto" class="form-label">Imagen del producto</label>
+                        <input id="imagen-producto" class="form-control mb-2" type="file" accept="image/jpeg,image/png" v-on:change="seleccionarImagen" :disabled="guardando" />
+                        <p class="form-text">JPG o PNG, hasta 2 MB; 4096 píxeles por lado y 12 megapíxeles. Se publica en el catálogo.</p>
+                        <img v-if="imagenActual" :src="imagenUrl(imagenActual)" alt="Imagen actual del producto" width="120" height="120" style="object-fit:contain" class="d-block mb-2" />
+                        <button v-if="editando && imagenActual" type="button" class="btn btn-outline-danger btn-sm mb-3" v-on:click="quitarImagen" :disabled="guardando">Quitar imagen actual</button>
                         <button class="btn btn-primary" :disabled="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
                         <button v-if="editando" type="button" class="btn btn-outline-secondary ms-2" v-on:click="cancelar" :disabled="guardando">Cancelar</button>
                     </form>
@@ -54,7 +59,7 @@
                         <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody>
                             <tr v-for="producto in elementos" :key="producto.idProducto">
-                                <td>{{ producto.nombre }}<small class="d-block text-muted">{{ producto.marca }}</small></td>
+                                <td><img v-if="producto.imagen" :src="imagenUrl(producto.imagen)" :alt="producto.nombre" width="48" height="48" style="object-fit:contain" loading="lazy" class="me-2" />{{ producto.nombre }}<small class="d-block text-muted">{{ producto.marca }}</small></td>
                                 <td>{{ producto.categoriaNombre }}</td><td>{{ moneda(producto.precio) }}</td><td>{{ producto.stock }}</td>
                                 <td><span class="badge" :class="producto.estado ? 'bg-success' : 'bg-secondary'">{{ producto.estado ? 'Activo' : 'Inactivo' }}</span></td>
                                 <td>

@@ -28,7 +28,7 @@ Authorize(Roles=Cliente) controla el acceso al modulo, pero no alcanza por si so
 
 ## Limites actuales
 
-No hay pagos ni envios. El vencimiento todavia no dispara cancelacion automatica. El cliente puede cancelar una reserva pendiente y volver a reservar; no edita directamente sus detalles confirmados. Avatar e imagenes se incorporan en la etapa de archivos.
+No hay pagos ni envios. El vencimiento todavia no dispara cancelacion automatica. El cliente puede cancelar una reserva pendiente y volver a reservar; no edita directamente sus detalles confirmados. El avatar se gestiona desde Mi perfil y las imagenes de productos desde el ABM; ver docs/Imagenes.md.
 
 ## Prueba manual sugerida
 
@@ -38,3 +38,4 @@ No hay pagos ni envios. El vencimiento todavia no dispara cancelacion automatica
 4. Revisar que el stock haya disminuido en Productos desde una cuenta del personal.
 5. Cancelar la reserva desde el cliente y comprobar la devolucion de stock.
 6. Con otra cuenta cliente, intentar consultar el ID de esa reserva: el servidor responde 404.
+

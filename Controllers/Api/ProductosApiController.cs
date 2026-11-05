@@ -36,7 +36,7 @@ public class ProductosApiController : ControllerBase
         var paginas = Math.Max(1, (int)Math.Ceiling(total / 10d)); pagina = Math.Clamp(pagina, 1, paginas);
         var elementos = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((pagina - 1) * 10).Take(10)
-            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado,
+            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado, p.Imagen,
                 p.IdCategoria, categoria = p.Categoria.Nombre }).ToListAsync();
         return Ok(new { elementos, pagina, paginas, total });
     }
@@ -45,7 +45,7 @@ public class ProductosApiController : ControllerBase
     public async Task<IActionResult> Obtener([FromRoute] int id)
     {
         var producto = await Visibles().Where(p => p.IdProducto == id)
-            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado,
+            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado, p.Imagen,
                 p.IdCategoria, categoria = p.Categoria.Nombre }).SingleOrDefaultAsync();
         return producto is null ? NotFound(new { mensaje = "El producto no existe." }) : Ok(producto);
     }
