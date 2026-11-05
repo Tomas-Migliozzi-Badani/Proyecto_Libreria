@@ -9,7 +9,7 @@ public class Usuario
     public string Nombre { get; set; } = "";
     public string Apellido { get; set; } = "";
     public string Email { get; set; } = "";
-    // Guarda el hash de la contrasena; el login implementara el hashing.
+    // Guarda el hash, no la contrasena original.
     public string Password { get; set; } = "";
     public string Rol { get; set; } = "";
     public bool Estado { get; set; }

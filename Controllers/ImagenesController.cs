@@ -5,12 +5,19 @@ namespace Proyecto_Libreria.Controllers;
 
 // Las fotos del catalogo y los avatares son publicos; no admitir documentos privados aqui.
 [AllowAnonymous]
-public class ImagenesController(ImagenesService imagenes) : Controller
+public class ImagenesController : Controller
 {
+    private readonly ImagenesService _imagenes;
+
+    public ImagenesController(ImagenesService imagenes)
+    {
+        _imagenes = imagenes;
+    }
+
     [HttpGet("imagenes/{nombre}")]
     public IActionResult Obtener(string nombre)
     {
-        var ruta = imagenes.Ruta(nombre);
+        var ruta = _imagenes.Ruta(nombre);
         if (ruta is null || !System.IO.File.Exists(ruta)) return NotFound();
         Response.Headers["X-Content-Type-Options"] = "nosniff";
         Response.Headers.CacheControl = "public,max-age=86400";

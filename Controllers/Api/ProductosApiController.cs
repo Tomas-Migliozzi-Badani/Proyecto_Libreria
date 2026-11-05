@@ -36,8 +36,18 @@ public class ProductosApiController : ControllerBase
         var paginas = Math.Max(1, (int)Math.Ceiling(total / 10d)); pagina = Math.Clamp(pagina, 1, paginas);
         var elementos = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((pagina - 1) * 10).Take(10)
-            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado, p.Imagen,
-                p.IdCategoria, categoria = p.Categoria.Nombre }).ToListAsync();
+            .Select(p => new
+            {
+                p.IdProducto,
+                p.Nombre,
+                p.Marca,
+                p.Precio,
+                p.Stock,
+                p.Estado,
+                p.Imagen,
+                p.IdCategoria,
+                categoria = p.Categoria.Nombre
+            }).ToListAsync();
         return Ok(new { elementos, pagina, paginas, total });
     }
 
@@ -45,8 +55,18 @@ public class ProductosApiController : ControllerBase
     public async Task<IActionResult> Obtener([FromRoute] int id)
     {
         var producto = await Visibles().Where(p => p.IdProducto == id)
-            .Select(p => new { p.IdProducto, p.Nombre, p.Marca, p.Precio, p.Stock, p.Estado, p.Imagen,
-                p.IdCategoria, categoria = p.Categoria.Nombre }).SingleOrDefaultAsync();
+            .Select(p => new
+            {
+                p.IdProducto,
+                p.Nombre,
+                p.Marca,
+                p.Precio,
+                p.Stock,
+                p.Estado,
+                p.Imagen,
+                p.IdCategoria,
+                categoria = p.Categoria.Nombre
+            }).SingleOrDefaultAsync();
         return producto is null ? NotFound(new { mensaje = "El producto no existe." }) : Ok(producto);
     }
 
@@ -55,8 +75,10 @@ public class ProductosApiController : ControllerBase
     {
         if (!await _context.Categorias.AnyAsync(c => c.IdCategoria == formulario.IdCategoria && c.Estado))
             return BadRequest(new { mensaje = "Selecciona una categoria activa." });
-        var producto = new Producto(); Copiar(producto, formulario);
-        _context.Productos.Add(producto); await _context.SaveChangesAsync();
+        var producto = new Producto();
+        CopiarDatos(producto, formulario);
+        _context.Productos.Add(producto);
+        await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(Obtener), new { id = producto.IdProducto }, new { producto.IdProducto, mensaje = "Producto creado." });
     }
 
@@ -68,7 +90,8 @@ public class ProductosApiController : ControllerBase
         if (!await _context.Categorias.AnyAsync(c => c.IdCategoria == formulario.IdCategoria
             && (c.Estado || c.IdCategoria == producto.IdCategoria)))
             return BadRequest(new { mensaje = "Selecciona una categoria activa." });
-        Copiar(producto, formulario); await _context.SaveChangesAsync();
+        CopiarDatos(producto, formulario);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 
@@ -80,10 +103,13 @@ public class ProductosApiController : ControllerBase
         producto.Estado = false; await _context.SaveChangesAsync();
         return NoContent();
     }
-    private static void Copiar(Producto p, ProductoFormulario f)
+    private static void CopiarDatos(Producto producto, ProductoFormulario formulario)
     {
-        p.Nombre = f.Nombre.Trim(); p.Marca = (f.Marca ?? "").Trim();
-        p.Precio = decimal.Round(f.Precio, 2, MidpointRounding.AwayFromZero);
-        p.Stock = f.Stock; p.IdCategoria = f.IdCategoria; p.Estado = f.Estado;
+        producto.Nombre = formulario.Nombre.Trim();
+        producto.Marca = (formulario.Marca ?? "").Trim();
+        producto.Precio = decimal.Round(formulario.Precio, 2, MidpointRounding.AwayFromZero);
+        producto.Stock = formulario.Stock;
+        producto.IdCategoria = formulario.IdCategoria;
+        producto.Estado = formulario.Estado;
     }
 }

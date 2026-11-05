@@ -32,8 +32,17 @@ public class UsuariosController : Controller
         // Nunca devolver el hash ni la contrasena al navegador.
         var elementos = await consulta.OrderBy(u => u.Apellido).ThenBy(u => u.IdUsuario)
             .Skip((pagina - 1) * 10).Take(10)
-            .Select(u => new { id = u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.Rol, u.Estado, u.IdCliente,
-                clienteNombre = u.Cliente == null ? "" : u.Cliente.Apellido + ", " + u.Cliente.Nombre }).ToListAsync();
+            .Select(u => new
+            {
+                id = u.IdUsuario,
+                u.Nombre,
+                u.Apellido,
+                u.Email,
+                u.Rol,
+                u.Estado,
+                u.IdCliente,
+                clienteNombre = u.Cliente == null ? "" : u.Cliente.Apellido + ", " + u.Cliente.Nombre
+            }).ToListAsync();
         return Json(new { elementos, total, paginas, pagina });
     }
     [HttpGet]
@@ -61,36 +70,39 @@ public class UsuariosController : Controller
         if (usuario is null) return NotFound(new { mensaje = "El usuario no existe." });
         return await Guardar(usuario, formulario, false);
     }
-    private async Task<IActionResult> Guardar(Usuario usuario, UsuarioFormulario f, bool nuevo)
+    private async Task<IActionResult> Guardar(Usuario usuario, UsuarioFormulario formulario, bool esNuevo)
     {
-        if (!nuevo && usuario.IdUsuario.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)
-            && (!f.Estado || f.Rol != "Administrador"))
+        if (!esNuevo && usuario.IdUsuario.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)
+            && (!formulario.Estado || formulario.Rol != "Administrador"))
             return BadRequest(new { mensaje = "No podes desactivar tu cuenta ni quitarte el rol de administrador." });
-        var email = f.Email.Trim().ToLowerInvariant();
+        var email = formulario.Email.Trim().ToLowerInvariant();
         if (await _context.Usuarios.AnyAsync(u => u.Email == email && u.IdUsuario != usuario.IdUsuario))
             return Conflict(new { mensaje = "El email ya esta registrado." });
-        if (f.Rol == "Cliente")
+        if (formulario.Rol == "Cliente")
         {
-            if (f.IdCliente is null || !await _context.Clientes.AnyAsync(c => c.IdCliente == f.IdCliente))
+            if (formulario.IdCliente is null || !await _context.Clientes.AnyAsync(c => c.IdCliente == formulario.IdCliente))
                 return BadRequest(new { mensaje = "Selecciona los datos del cliente que corresponden a esta cuenta." });
-            if (await _context.Usuarios.AnyAsync(u => u.IdCliente == f.IdCliente && u.IdUsuario != usuario.IdUsuario))
+            if (await _context.Usuarios.AnyAsync(u => u.IdCliente == formulario.IdCliente && u.IdUsuario != usuario.IdUsuario))
                 return Conflict(new { mensaje = "Ese cliente ya tiene otra cuenta vinculada." });
         }
-        var nuevoCliente = f.Rol == "Cliente" ? f.IdCliente : null;
-        if (!nuevo && (usuario.Rol != f.Rol || usuario.Estado != f.Estado
-            || usuario.Email != email || usuario.IdCliente != nuevoCliente)) usuario.VersionToken++;
-        usuario.IdCliente = nuevoCliente;
-        usuario.Nombre = f.Nombre.Trim(); usuario.Apellido = f.Apellido.Trim(); usuario.Email = email;
-        usuario.Rol = f.Rol; usuario.Estado = f.Estado;
-        if (!string.IsNullOrEmpty(f.Password))
+        var idClienteSeleccionado = formulario.Rol == "Cliente" ? formulario.IdCliente : null;
+        if (!esNuevo && (usuario.Rol != formulario.Rol || usuario.Estado != formulario.Estado
+            || usuario.Email != email || usuario.IdCliente != idClienteSeleccionado)) usuario.VersionToken++;
+        usuario.IdCliente = idClienteSeleccionado;
+        usuario.Nombre = formulario.Nombre.Trim();
+        usuario.Apellido = formulario.Apellido.Trim();
+        usuario.Email = email;
+        usuario.Rol = formulario.Rol;
+        usuario.Estado = formulario.Estado;
+        if (!string.IsNullOrEmpty(formulario.Password))
         {
-            usuario.Password = _hasher.HashPassword(usuario, f.Password);
+            usuario.Password = _hasher.HashPassword(usuario, formulario.Password);
             usuario.VersionToken++;
         }
-        if (nuevo) _context.Usuarios.Add(usuario);
+        if (esNuevo) _context.Usuarios.Add(usuario);
         try { await _context.SaveChangesAsync(); }
         catch (DbUpdateException) { return Conflict(new { mensaje = "No se pudo guardar. Revisa si el email ya existe." }); }
-        return Json(new { mensaje = nuevo ? "Usuario creado." : "Usuario actualizado.", id = usuario.IdUsuario });
+        return Json(new { mensaje = esNuevo ? "Usuario creado." : "Usuario actualizado.", id = usuario.IdUsuario });
     }
     [HttpDelete, ValidateAntiForgeryToken]
     public async Task<IActionResult> Eliminar(int id)

@@ -80,7 +80,20 @@ Vue.createApp({
             this.categoriaSeleccionada = producto.categoriaNombre; this.opcionesCategoria = [];
             this.mensaje = ''; document.getElementById('nombre-producto').focus();
         },
-        cancelar() { this.imagenArchivo = null; this.imagenActual = ''; document.getElementById('imagen-producto').value = '';  clearTimeout(this.temporizador); ++this.busquedaNumero; this.buscandoCategorias = false; this.categoriaSeleccionada = ''; this.opcionesCategoria = []; this.busquedaCategoria = ''; this.busquedaRealizada = false; this.editando = null; this.formulario = { nombre: '', marca: '', precio: 0.01, stock: 0, idCategoria: 0, estado: true }; },
+        cancelar() {
+            clearTimeout(this.temporizador);
+            ++this.busquedaNumero;
+            this.imagenArchivo = null;
+            this.imagenActual = '';
+            document.getElementById('imagen-producto').value = '';
+            this.buscandoCategorias = false;
+            this.categoriaSeleccionada = '';
+            this.opcionesCategoria = [];
+            this.busquedaCategoria = '';
+            this.busquedaRealizada = false;
+            this.editando = null;
+            this.formulario = { nombre: '', marca: '', precio: 0.01, stock: 0, idCategoria: 0, estado: true };
+        },
         async guardar() {
             if (this.guardando) return;
             if (!this.formulario.nombre.trim()) { this.error = true; this.mensaje = 'El nombre es obligatorio.'; return; }

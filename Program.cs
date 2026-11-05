@@ -16,7 +16,7 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true)
     .AddEnvironmentVariables();
 
 
-// Add services to the container.
+// Registrar los controladores y servicios que usa la aplicacion.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ReservasService>();
 builder.Services.AddScoped<ImagenesService>();
@@ -46,13 +46,19 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
     options.IncludeErrorDetails = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true,
-        ValidateIssuerSigningKey = true, RequireExpirationTime = true, RequireSignedTokens = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        RequireExpirationTime = true,
+        RequireSignedTokens = true,
         ValidIssuer = builder.Configuration["TokenAuthentication:Issuer"],
         ValidAudience = builder.Configuration["TokenAuthentication:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
-        ClockSkew = TimeSpan.FromSeconds(30), NameClaimType = "name", RoleClaimType = "role"
+        ClockSkew = TimeSpan.FromSeconds(30),
+        NameClaimType = "name",
+        RoleClaimType = "role"
     };
     options.EventsType = typeof(JwtUsuarioEvents);
 });
@@ -99,11 +105,11 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("DatosPr
     await DatosDemostracion.CrearUsuarios(scope.ServiceProvider.GetRequiredService<LibreriaContext>());
 }
 
-// Configure the HTTP request pipeline.
+// Configurar como se procesan las peticiones HTTP.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // Indicar al navegador que use HTTPS en produccion.
     app.UseHsts();
 }
 

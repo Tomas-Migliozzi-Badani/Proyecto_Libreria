@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Proyecto_Libreria.Models;
 namespace Proyecto_Libreria.Services;
 
-// Genera el JWT con el mismo esquema de claims, firma y vencimiento de los apuntes.
+// Crea un token firmado para acceder a la API durante 30 minutos.
 public class JwtService
 {
     private readonly IConfiguration _config;
@@ -25,12 +25,17 @@ public class JwtService
             new("version", usuario.VersionToken.ToString(CultureInfo.InvariantCulture))
         };
         // No incluir passwords, hashes ni la clave secreta en el payload: no esta cifrado.
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["TokenAuthentication:SecretKey"]!));
+        var claveFirma = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["TokenAuthentication:SecretKey"]!));
         var token = new JwtSecurityToken(
             issuer: _config["TokenAuthentication:Issuer"], audience: _config["TokenAuthentication:Audience"],
             claims: claims, notBefore: ahora, expires: vencimiento,
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
-        return new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), tokenType = "Bearer",
-            expiresAt = vencimiento, usuario = new { id = usuario.IdUsuario, usuario.Nombre, usuario.Rol } };
+            signingCredentials: new SigningCredentials(claveFirma, SecurityAlgorithms.HmacSha256));
+        return new
+        {
+            accessToken = new JwtSecurityTokenHandler().WriteToken(token),
+            tokenType = "Bearer",
+            expiresAt = vencimiento,
+            usuario = new { id = usuario.IdUsuario, usuario.Nombre, usuario.Rol }
+        };
     }
 }

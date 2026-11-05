@@ -37,7 +37,7 @@ public class ClientesController : Controller
         if (formulario is null || !ModelState.IsValid) return BadRequest(new { mensaje = "Revisa nombre, apellido, DNI (7 a 9 digitos), telefono y email." });
         if (await _context.Clientes.AnyAsync(c => c.Dni == formulario.Dni)) return Conflict(new { mensaje = "Ya existe un cliente con ese DNI." });
         var cliente = new Cliente();
-        Copiar(cliente, formulario);
+        CopiarDatos(cliente, formulario);
         _context.Clientes.Add(cliente);
         try { await _context.SaveChangesAsync(); }
         catch (DbUpdateException) { return Conflict(new { mensaje = "El DNI ya esta registrado o los datos cambiaron. Revisa el cliente." }); }
@@ -50,15 +50,18 @@ public class ClientesController : Controller
         var cliente = await _context.Clientes.FindAsync(id);
         if (cliente is null) return NotFound(new { mensaje = "El cliente no existe." });
         if (await _context.Clientes.AnyAsync(c => c.IdCliente != id && c.Dni == formulario.Dni)) return Conflict(new { mensaje = "Ya existe un cliente con ese DNI." });
-        Copiar(cliente, formulario);
+        CopiarDatos(cliente, formulario);
         try { await _context.SaveChangesAsync(); }
         catch (DbUpdateException) { return Conflict(new { mensaje = "El DNI ya esta registrado o los datos cambiaron. Revisa el cliente." }); }
         return Json(new { mensaje = "Cliente actualizado." });
     }
-    private static void Copiar(Cliente c, ClienteFormulario f)
+    private static void CopiarDatos(Cliente cliente, ClienteFormulario formulario)
     {
-        c.Nombre = f.Nombre.Trim(); c.Apellido = f.Apellido.Trim(); c.Dni = f.Dni;
-        c.Telefono = f.Telefono.Trim(); c.Email = f.Email.Trim().ToLowerInvariant();
+        cliente.Nombre = formulario.Nombre.Trim();
+        cliente.Apellido = formulario.Apellido.Trim();
+        cliente.Dni = formulario.Dni;
+        cliente.Telefono = formulario.Telefono.Trim();
+        cliente.Email = formulario.Email.Trim().ToLowerInvariant();
     }
     [HttpDelete, ValidateAntiForgeryToken]
     public async Task<IActionResult> Eliminar(int id)

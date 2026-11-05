@@ -8,10 +8,7 @@ public class LibreriaContext : DbContext
     public LibreriaContext(DbContextOptions<LibreriaContext> options)
         : base(options)
     {
-        
     }
-    
-    
 
     public DbSet<Categoria> Categorias { get; set; }
     public DbSet<Producto> Productos { get; set; }
@@ -31,8 +28,8 @@ public class LibreriaContext : DbContext
         modelBuilder.Entity<DetalleReserva>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
 
         // Conservar el historial: no borrar reservas al eliminar clientes o productos.
-        foreach (var relation in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
-            relation.DeleteBehavior = DeleteBehavior.Restrict;
+        foreach (var relacion in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            relacion.DeleteBehavior = DeleteBehavior.Restrict;
 
         modelBuilder.Entity<Categoria>().Property(c => c.Nombre).HasMaxLength(100);
         modelBuilder.Entity<Producto>().Property(p => p.Nombre).HasMaxLength(150);
