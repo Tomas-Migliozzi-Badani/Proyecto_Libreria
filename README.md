@@ -117,16 +117,7 @@ JPG/PNG de hasta 2 MB, 4096 píxeles por lado y 12 megapíxeles. Se valida/decod
 
 Los archivos quedan en `App_Data/imagenes`, fuera de wwwroot y Git; MySQL guarda su nombre. Para trasladar datos completos se respalda la base **y** esa carpeta. La aplicación necesita permiso de escritura y la publicación no copia automáticamente las fotos personales. Al desplegar, conservar o restaurar la carpeta. El SQL demo no referencia archivos externos: se pueden subir las dos imágenes de ejemplo incluidas.
 
-## Verificación y guías
 
-Se restauró y compiló una copia sin bin/obj, se importó el SQL en una base nueva y se verificó el historial de migraciones. Resultado: **0 errores y 0 advertencias**, 21 comprobaciones de colección API y 13 comprobaciones de instalación/roles/datos/archivos. Detalle y límites en [Verificación de entrega](docs/Verificacion_Entrega.md).
-
-Las capturas muestran operaciones reales en navegador. El registro de la API corresponde a solicitudes HTTP y scripts de la colección ejecutados mediante un runner de desarrollo; no se presenta como captura de Postman ni como cobertura unitaria completa. La colección importable queda disponible para repetir en Postman.
-
-- [Guía de ABM](docs/Guia_ABM.md).
-- [Portal de clientes](docs/Portal_Clientes.md).
-- [API y JWT](docs/api/Guia_API_JWT.md).
-- [Imágenes](docs/Imagenes.md).
 - [Índice de evidencias](docs/evidencias/README.md).
 - [DER](docs/diagramas/DER.md) y [clases](docs/diagramas/Clases.md).
 
